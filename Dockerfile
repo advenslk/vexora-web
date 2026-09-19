@@ -3,7 +3,7 @@
 FROM --platform=$TARGETOS/$TARGETARCH php:8.3-fpm-alpine AS final
 WORKDIR /app
 
-RUN apk add --no-cache --update ca-certificates dcron curl git supervisor tar unzip nginx libpng-dev libxml2-dev libzip-dev icu-dev autoconf make g++ gcc libc-dev linux-headers gmp-dev \
+RUN apk add --no-cache --update ca-certificates dcron curl git supervisor tar unzip nginx libpng-dev libxml2-dev libzip-dev icu-dev autoconf make g++ gcc libc-dev linux-headers gmp-dev netcat-openbsd \
     && docker-php-ext-configure zip \
     && docker-php-ext-install bcmath gd pdo_mysql zip intl sockets gmp \
     && pecl install redis \
