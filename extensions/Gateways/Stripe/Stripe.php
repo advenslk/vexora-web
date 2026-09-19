@@ -814,40 +814,39 @@ class Stripe extends Gateway
         return true;
     }
 
-    // Function to split and decode the Stripe-Signature header
-    private function getHeaderValues($sig_header)
+    private function isValidSignature(string $payload, ?string $sigHeader, ?string $secret): bool
     {
-        $parts = explode(',', $sig_header);
-        $timestamp = null;
-        $signature = null;
-
-        foreach ($parts as $part) {
-            if (strpos($part, 't=') === 0) {
-                $timestamp = substr($part, 2);
-            } elseif (strpos($part, 'v1=') === 0) {
-                $signature = substr($part, 3);
-            }
-        }
-
-        return [$timestamp, $signature];
-    }
-
-    // Validate the signature
-    private function isValidSignature($payload, $sig_header, $secret)
-    {
-        [$timestamp, $signature] = $this->getHeaderValues($sig_header);
-
-        if (empty($timestamp) || empty($signature) || empty($secret)) {
+        if (!$sigHeader || !$secret) {
             return false;
         }
 
-        // Create the signed payload string
-        $signed_payload = $timestamp . '.' . $payload;
+        $timestamp = null;
+        $signatures = [];
 
-        // Compute the expected signature
-        $expected_signature = hash_hmac('sha256', $signed_payload, $secret);
+        foreach (explode(',', $sigHeader) as $part) {
+            [$key, $value] = array_pad(explode('=', trim($part), 2), 2, null);
 
-        // Compare the expected signature to the actual signature
-        return hash_equals($expected_signature, $signature);
+            if ($key === 't' && ctype_digit((string) $value)) {
+                $timestamp = (int) $value;
+            }
+
+            if ($key === 'v1' && is_string($value) && preg_match('/^[a-f0-9]{64}$/i', $value)) {
+                $signatures[] = $value;
+            }
+        }
+
+        if (!$timestamp || empty($signatures) || abs(now()->timestamp - $timestamp) > 300) {
+            return false;
+        }
+
+        $expected = hash_hmac('sha256', $timestamp . '.' . $payload, $secret);
+
+        foreach ($signatures as $signature) {
+            if (hash_equals($expected, $signature)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
