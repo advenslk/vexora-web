@@ -8,18 +8,17 @@ use App\Models\Service;
 
 class RenewServiceService
 {
-    /**
-     * Handle the service renewal.
-     *
-     * @return void
-     */
-    public function handle(Service $service)
+    public function handle(Service $service): void
     {
         if ($service->product->server) {
-            if ($service->status == Service::STATUS_SUSPENDED) {
+            if ($service->status === Service::STATUS_SUSPENDED) {
                 UnsuspendJob::dispatch($service);
-            } elseif ($service->status == Service::STATUS_PENDING) {
+                return;
+            }
+
+            if ($service->status === Service::STATUS_PENDING) {
                 CreateJob::dispatch($service);
+                return;
             }
         }
 
