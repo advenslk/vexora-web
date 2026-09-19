@@ -1,91 +1,86 @@
-<br>
-<p align="center">
-  <a href="https://paymenter.org">
-    <picture>
-      <source media="(max-width: 768px)" srcset="https://paymenter.org/iso.svg" width="65px">
-      <source media="(prefers-color-scheme: dark)" srcset="https://paymenter.org/iso.svg" width="80px">
-      <source media="(prefers-color-scheme: light)" srcset="https://paymenter.org/iso.svg" width="80px">
-      <img alt="Paymenter Isotype" src="https://paymenter.org/iso.svg">
-    </picture>
-  </a>
-</p>
-<h1 align="center">
-  Paymenter
-</h1>
+# Lunar Hosting
 
-<div align="center">
-  <h3>Open-Source Billing, Built for Hosting</h3>
-  <p>Automate subscriptions, eliminate billing chaos, and grow your hosting business – without vendor lock-ins or hidden costs.</p>
-</div>
+Lunar Hosting is a self-hosted hosting billing and provisioning platform built on Laravel. It is based on the open-source Paymenter codebase and retains the applicable MIT licensing and upstream attribution.
 
-<h4 align="center">
-  <a href="https://paymenter.org">Website</a> ·
-  <a href="https://paymenter.org/docs/installation/install">Documentation</a> ·
-  <a href="https://demo.paymenter.org">Live Demo</a> ·
-  <a href="https://paymenter.org/marketplace">Extensions</a>
-</h4>
+## Production architecture
 
- <div align="center">
-   
-  [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/Paymenter/paymenter/blob/master/LICENSE)
-  [![Downloads](https://img.shields.io/github/downloads/paymenter/paymenter/total)]()
-  [![GitHub release (latest by date)](https://img.shields.io/github/v/release/paymenter/paymenter)](https://github.com/Paymenter/paymenter/releases)
-    <br>
-    <br>
-  [![Discord](https://img.shields.io/discord/882318291014651924?logo=discord&labelColor=white&color=5865f2)](https://discord.gg/paymenter-882318291014651924)
-  
-</div>
+- Laravel 12 / PHP 8.3+
+- Filament 5
+- MariaDB
+- Redis
+- Queue workers for asynchronous provisioning
+- Extension-based payment gateways
+- Extension-based infrastructure/server provisioning
+- Docker Compose deployment
+- Customer billing, invoices, services and support workflows
 
-<div align="center">
-    <picture>
-      <source media="(max-width: 768px)" srcset="https://upload.wikimedia.org/wikipedia/commons/c/ca/1x1.png">
-      <source media="(prefers-color-scheme: dark)" srcset="https://paymenter.org/landing/screenshots/dark/dashboard.webp">
-      <source media="(prefers-color-scheme: light)" srcset="https://paymenter.org/landing/screenshots/light/dashboard.webp">
-      <img alt="Paymenter Dashboard" src="https://paymenter.org/landing/screenshots/dark/dashboard.webp">
-    </picture>
-    <br>
-</div>
+The platform is designed so that payment confirmation can trigger real service provisioning through the configured infrastructure extension. It does not rely on demo server states or fake payment success.
 
-## Getting Started
+## Docker deployment
 
+1. Copy the environment template:
 
-#### Installation & Documentation
+```bash
+cp .env.example .env
+```
 
-For a detailed explanation of how to install and configure Paymenter, take a look at our [documentation here](https://paymenter.org/docs/getting-started/introduction/).
+2. Set production values in `.env`, including:
 
-Or, get additional help via [Community Discord](https://discord.gg/xB4UUT3XQg).
+- `APP_URL`
+- `APP_KEY` (generated automatically on first container start if empty)
+- `DB_DATABASE`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `DB_ROOT_PASSWORD`
+- `APP_PORT`
 
-#### Requirements
+3. Start the production stack:
 
-The requirements for Paymenter are the following:
+```bash
+docker compose up -d --build
+```
 
-- PHP (8.3 or higher).
-- Composer
-- Webserver (Apache or Nginx)
-- Database (MariaDB)
+4. Check the containers:
 
-## What is Paymenter?
+```bash
+docker compose ps
+docker compose logs -f app
+```
 
-Paymenter is an open-source billing platform tailored for hosting companies. It simplifies the management of hosting services, providing a seamless experience for both providers and customers. Built on modern web technologies, Paymenter offers a flexible and robust solution for your hosting business needs.
+The application container waits for MariaDB, runs pending migrations when `LUNAR_AUTO_MIGRATE=true`, and starts PHP-FPM, Nginx, the Redis queue worker and Laravel scheduler under Supervisor.
 
-### Key Features:
-- User-Friendly Interface: Paymenter is designed with simplicity in mind, ensuring an intuitive experience for users of all technical levels.
-- Open Source and Extensible: As an open-source platform, Paymenter encourages community contributions and customization. Its architecture allows for extensive modifications and integration with other tools.
-- Efficient Management: Streamline your operations with Paymenter powerful admin panel, designed to enhance productivity and reduce overhead.
-- Secure and Reliable: Built with security as a priority, Paymenter ensures the protection of your data and transactions.
-- Community Driven: Join an engaged community of developers and hosting providers to collaborate and drive the future development of Paymenter.
+For a production installation, place the stack behind HTTPS using a reverse proxy or load balancer and configure `APP_URL` to the public HTTPS URL.
 
-Paymenter is available under the MIT license, offering you the freedom to adapt and evolve the platform to meet your specific requirements.
+## Payments and provisioning
 
-## Sponsors
+Payment gateways must be configured in the admin panel with their real credentials and webhook endpoints.
 
-Thanks to all sponsors for helping fund Paymenter's development. [Interested in becoming a sponsor?](https://github.com/sponsors/Paymenter)
+The payment lifecycle is:
 
+1. Customer creates an order/invoice.
+2. Customer completes payment through a configured gateway.
+3. Gateway webhook is authenticated and processed.
+4. The payment is recorded against the invoice.
+5. A paid invoice is processed idempotently.
+6. Service provisioning/renewal is dispatched to the queue.
+7. The configured server/infrastructure extension creates or updates the real service.
+8. The service becomes active only after successful provisioning.
 
-<a href="https://www.kuroit.com/?rel=paymenter">
-  <img src="https://github.com/user-attachments/assets/8d00b4bb-a66c-449f-94e4-cbb9ea1c0d11" width="400">
-</a>
+Do not mark an invoice as paid manually in production unless that is an intentional administrative action.
+
+## Testing
+
+Run the project checks locally with:
+
+```bash
+composer validate
+composer install
+vendor/bin/pint --test
+vendor/bin/phpunit --testsuite "Lunar Hosting"
+```
+
+GitHub Actions runs Composer validation, PHP syntax checks, formatting checks and the PHPUnit suite on pushes and pull requests targeting `main`.
 
 ## License
 
-Licensed under the [MIT License](https://github.com/Paymenter/Paymenter/blob/master/LICENSE).
+This project remains licensed under the MIT License in accordance with the upstream Paymenter license and the repository's applicable copyright and attribution terms.
