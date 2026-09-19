@@ -13,6 +13,7 @@ use App\Models\Extension;
 use App\Models\Invoice;
 use App\Models\InvoiceTransaction;
 use App\Models\Service;
+use App\Enums\InvoiceTransactionStatus;
 use App\Models\User;
 use App\Services\Payment\PaymentAmountValidator;
 use Carbon\Carbon;
@@ -236,6 +237,13 @@ class Stripe extends Gateway
 
                 $currency = strtolower((string) ($paymentIntent->currency ?? ''));
                 $amount = ((float) ($paymentIntent->amount ?? 0)) / 100;
+                $existingTransaction = InvoiceTransaction::where('transaction_id', $paymentIntent->id)->first();
+
+                // Stripe can retry a webhook. A previously recorded successful transaction is already settled.
+                if ($event->type === 'payment_intent.succeeded'
+                    && $existingTransaction?->status === InvoiceTransactionStatus::Succeeded) {
+                    break;
+                }
 
                 if (!PaymentAmountValidator::matches($invoice->currency_code, $currency, $invoice->remaining, $amount)
                     && $event->type === 'payment_intent.succeeded') {
