@@ -44,7 +44,11 @@ class CreateJob implements ShouldQueue, ShouldBeUnique
         try {
             $data = ExtensionHelper::createServer($this->service);
 
-            if ($this->service->product->server && is_array($data) && isset($data['server'])) {
+            if (!is_array($data) || empty($data['server'])) {
+                throw new \RuntimeException('Server provisioning returned no server identifier.');
+            }
+
+            if ($this->service->product->server) {
                 $this->service->expires_at = $this->service->calculateNextDueDate();
                 $this->service->status = Service::STATUS_ACTIVE;
                 $this->service->provisioning_status = 'completed';
