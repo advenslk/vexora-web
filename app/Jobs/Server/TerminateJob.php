@@ -26,6 +26,8 @@ class TerminateJob implements ShouldQueue, ShouldBeUnique
 
     public $uniqueFor = 600;
 
+    public $afterCommit = true;
+
     /**
      * Create a new job instance.
      */
