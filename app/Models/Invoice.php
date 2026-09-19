@@ -24,10 +24,11 @@ class Invoice extends Model implements Auditable
 
     public const STATUS_CANCELLED = 'cancelled';
 
-    protected $fillable = ['number', 'user_id', 'currency_code', 'due_at', 'status'];
+    protected $fillable = ['number', 'user_id', 'currency_code', 'due_at', 'status', 'paid_processed_at'];
 
     protected $casts = [
         'due_at' => 'date',
+        'paid_processed_at' => 'datetime',
     ];
 
     public bool $send_create_email = true;
