@@ -1,0 +1,1 @@
+import{u as a,j as n,a as r}from"./index-uWja_BUA.js";function u({children:e,delay:i=0,className:t=""}){const o=a();return n.jsx(r.div,{className:t,initial:o?!1:{opacity:0,y:30},whileInView:{opacity:1,y:0},viewport:{once:!0,margin:"-80px"},transition:{duration:.55,delay:i,ease:[.22,1,.36,1]},children:e})}export{u as R};

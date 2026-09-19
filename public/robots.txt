@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /account
+Disallow: /cart
+Disallow: /invoices
+Disallow: /services
+Disallow: /tickets
+Disallow: /login
+Disallow: /register
+Disallow: /password
+
+Sitemap: https://vexora.cloud/sitemap.xml

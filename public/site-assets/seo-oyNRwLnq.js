@@ -1,0 +1,1 @@
+function c(e,o){var n,r;document.title=e;const t=document.querySelector("meta[name='description']");t==null||t.setAttribute("content",o),(n=document.querySelector("meta[property='og:title']"))==null||n.setAttribute("content",e),(r=document.querySelector("meta[property='og:description']"))==null||r.setAttribute("content",o)}export{c as s};
