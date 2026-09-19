@@ -18,13 +18,13 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Paymenter'),
+    'name' => env('APP_NAME', 'Lunar Hosting'),
 
-    'version' => '1.5.8',
+    'version' => '1.0.0',
 
     'commit' => '',
 
-    'telemetry_enabled' => env('TELEMETRY_ENABLED', true),
+    'telemetry_enabled' => env('TELEMETRY_ENABLED', false),
 
     /*
     |--------------------------------------------------------------------------
