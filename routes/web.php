@@ -17,22 +17,22 @@ use App\Models\Product;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/', 'vexora-static')->name('home');
-Route::redirect('/store', '/products/budget-game-hosting')->name('store');
-Route::view('/game-servers', 'vexora-static')->name('vexora.website.game-servers');
-Route::view('/vps', 'vexora-static')->name('vexora.website.vps');
-Route::view('/vds', 'vexora-static')->name('vexora.website.vds');
-Route::view('/bot-hosting', 'vexora-static')->name('vexora.website.bot-hosting');
-Route::view('/free-hosting', 'vexora-static')->name('vexora.website.free-hosting');
-Route::view('/support', 'vexora-static')->name('vexora.website.support');
-Route::view('/contact', 'vexora-static')->name('vexora.website.contact');
-Route::view('/terms', 'vexora-static')->name('vexora.website.terms');
-Route::view('/refund-policy', 'vexora-static')->name('vexora.website.refund-policy');
+Route::view('/', 'lunar-static')->name('home');
+Route::redirect('/store', '/products')->name('store');
+Route::view('/game-servers', 'lunar-static')->name('vexora.website.game-servers');
+Route::view('/vps', 'lunar-static')->name('vexora.website.vps');
+Route::view('/vds', 'lunar-static')->name('vexora.website.vds');
+Route::view('/bot-hosting', 'lunar-static')->name('vexora.website.bot-hosting');
+Route::view('/free-hosting', 'lunar-static')->name('vexora.website.free-hosting');
+Route::view('/support', 'lunar-static')->name('vexora.website.support');
+Route::view('/contact', 'lunar-static')->name('vexora.website.contact');
+Route::view('/terms', 'lunar-static')->name('vexora.website.terms');
+Route::view('/refund-policy', 'lunar-static')->name('vexora.website.refund-policy');
 Route::view('/founder', 'founder')->name('founder');
 Route::get('/sitemap.xml', function () {
     $urls = collect([
-        ['loc' => 'https://vexora.cloud/', 'priority' => '1.0', 'changefreq' => 'daily'],
-        ['loc' => 'https://vexora.cloud/founder', 'priority' => '0.8', 'changefreq' => 'monthly'],
+        ['loc' => config('app.url') . '/', 'priority' => '1.0', 'changefreq' => 'daily'],
+        ['loc' => config('app.url') . '/founder', 'priority' => '0.8', 'changefreq' => 'monthly'],
     ]);
 
     Category::whereNull('parent_id')
@@ -43,7 +43,7 @@ Route::get('/sitemap.xml', function () {
         ->get(['slug', 'updated_at'])
         ->each(function ($category) use ($urls) {
             $urls->push([
-                'loc' => 'https://vexora.cloud/products/' . $category->slug,
+                'loc' => config('app.url') . '/products/' . $category->slug,
                 'priority' => '0.9',
                 'changefreq' => 'weekly',
                 'lastmod' => optional($category->updated_at)->toAtomString(),
@@ -60,7 +60,7 @@ Route::get('/sitemap.xml', function () {
             }
 
             $urls->push([
-                'loc' => 'https://vexora.cloud/products/' . $product->category->slug . '/' . $product->slug,
+                'loc' => config('app.url') . '/products/' . $product->category->slug . '/' . $product->slug,
                 'priority' => '0.85',
                 'changefreq' => 'weekly',
                 'lastmod' => optional($product->updated_at)->toAtomString(),
