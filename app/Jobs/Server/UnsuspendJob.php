@@ -4,37 +4,62 @@ namespace App\Jobs\Server;
 
 use App\Helpers\ExtensionHelper;
 use App\Models\Service;
-use Exception;
+use Throwable;
 use Illuminate\Bus\Queueable;
+use Illuminate\Bus\Middleware\WithoutOverlapping;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
-class UnsuspendJob implements ShouldQueue
+class UnsuspendJob implements ShouldQueue, ShouldBeUnique
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $timeout = 120;
+    public $tries = 3;
+    public $backoff = [10, 30, 60];
+    public $uniqueFor = 600;
 
-    public $tries = 1;
-
-    /**
-     * Create a new job instance.
-     */
     public function __construct(public Service $service) {}
 
-    /**
-     * Execute the job.
-     */
+    public function uniqueId(): string
+    {
+        return 'service-unsuspend:' . $this->service->getKey();
+    }
+
+    public function middleware(): array
+    {
+        return [
+            (new WithoutOverlapping($this->uniqueId()))->expireAfter($this->timeout + 60),
+        ];
+    }
+
     public function handle(): void
     {
         try {
             ExtensionHelper::unsuspendServer($this->service);
-        } catch (Exception $e) {
-            if ($e->getMessage() !== 'No server assigned to this product') {
-                throw $e;
-            }
+            $this->service->expires_at = $this->service->calculateNextDueDate();
+            $this->service->status = Service::STATUS_ACTIVE;
+            $this->service->provisioning_status = 'completed';
+            $this->service->provisioning_error = null;
+            $this->service->save();
+        } catch (Throwable $exception) {
+            $this->service->updateQuietly([
+                'provisioning_status' => 'failed',
+                'provisioning_error' => $exception->getMessage(),
+            ]);
+
+            throw $exception;
         }
+    }
+
+    public function failed(Throwable $exception): void
+    {
+        $this->service->updateQuietly([
+            'provisioning_status' => 'failed',
+            'provisioning_error' => $exception->getMessage(),
+        ]);
     }
 }
