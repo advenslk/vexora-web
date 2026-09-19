@@ -2,6 +2,7 @@
 set -eu
 
 mkdir -p /app/var /app/storage/framework/cache /app/storage/framework/sessions /app/storage/framework/views /app/storage/logs
+chown -R nginx:nginx /app/var /app/storage
 
 if [ ! -f /app/var/.env ]; then
     php /app/artisan key:generate --show --no-ansi > /tmp/lunar-key
