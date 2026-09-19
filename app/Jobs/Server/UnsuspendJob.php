@@ -38,6 +38,8 @@ class UnsuspendJob implements ShouldQueue, ShouldBeUnique
 
     public function handle(): void
     {
+        $this->service->updateQuietly(['provisioning_status' => 'processing']);
+
         try {
             ExtensionHelper::unsuspendServer($this->service);
             $this->service->expires_at = $this->service->calculateNextDueDate();
