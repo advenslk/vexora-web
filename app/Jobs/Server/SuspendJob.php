@@ -39,8 +39,15 @@ class SuspendJob implements ShouldQueue, ShouldBeUnique
 
     public function handle(): void
     {
+        $this->service->updateQuietly(['provisioning_status' => 'processing']);
+
         try {
             $data = ExtensionHelper::suspendServer($this->service);
+
+            $this->service->status = Service::STATUS_SUSPENDED;
+            $this->service->provisioning_status = 'completed';
+            $this->service->provisioning_error = null;
+            $this->service->save();
 
             if ($this->sendNotification) {
                 NotificationHelper::serverSuspendedNotification($this->service->user, $this->service, is_array($data) ? $data : []);
