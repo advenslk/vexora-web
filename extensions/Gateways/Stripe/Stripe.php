@@ -329,6 +329,17 @@ class Stripe extends Gateway
 
                     if ($invoiceModel && ($payment->payment->type ?? null) === 'payment_intent') {
                         $amount = ((float) ($stripeInvoice->amount_paid ?? 0)) / 100;
+                        $currency = strtolower((string) ($stripeInvoice->currency ?? ''));
+
+                        if (!PaymentAmountValidator::matches(
+                            $invoiceModel->currency_code,
+                            $currency,
+                            $invoiceModel->remaining,
+                            $amount
+                        )) {
+                            return response()->json(['error' => 'Payment amount or currency mismatch'], 422);
+                        }
+
                         ExtensionHelper::addPayment(
                             $invoiceModel,
                             'Stripe',
