@@ -485,22 +485,43 @@ class ExtensionHelper
                 ]);
             }
 
-            $updateData = [
-                'gateway_id' => $gateway?->id,
-                'amount' => $amount,
-                'status' => $status,
-                'is_credit_transaction' => $isCreditTransaction,
-            ];
-            if ($fee !== null) {
-                $updateData['fee'] = $fee;
+            $transaction = $invoice->transactions()
+                ->where('transaction_id', $transactionId)
+                ->lockForUpdate()
+                ->first();
+
+            if ($transaction) {
+                // Never allow a late/retried failure or processing event to downgrade
+                // an already-settled transaction.
+                if ($transaction->status === InvoiceTransactionStatus::Succeeded
+                    && $status !== InvoiceTransactionStatus::Succeeded) {
+                    return $transaction;
+                }
+
+                $transaction->fill([
+                    'gateway_id' => $gateway?->id,
+                    'amount' => $amount,
+                    'status' => $status,
+                    'is_credit_transaction' => $isCreditTransaction,
+                ]);
+
+                if ($fee !== null) {
+                    $transaction->fee = $fee;
+                }
+
+                $transaction->save();
+
+                return $transaction;
             }
 
-            return $invoice->transactions()->updateOrCreate(
-                [
-                    'transaction_id' => $transactionId,
-                ],
-                $updateData
-            );
+            return $invoice->transactions()->create([
+                'gateway_id' => $gateway?->id,
+                'amount' => $amount,
+                'fee' => $fee,
+                'transaction_id' => $transactionId,
+                'status' => $status,
+                'is_credit_transaction' => $isCreditTransaction,
+            ]);
         });
 
         return $transaction;
