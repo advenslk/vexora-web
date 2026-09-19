@@ -14,6 +14,7 @@ use App\Models\Invoice;
 use App\Models\InvoiceTransaction;
 use App\Models\Service;
 use App\Models\User;
+use App\Services\Payment\PaymentAmountValidator;
 use Carbon\Carbon;
 use Exception;
 use Filament\Notifications\Notification;
@@ -205,111 +206,142 @@ class Stripe extends Gateway
 
     public function webhook(Request $request)
     {
-        if (!$this->isValidSignature($request->getContent(), $request->header('Stripe-Signature'), $this->config('stripe_webhook_secret'))) {
+        $payload = $request->getContent();
+        $signature = $request->header('Stripe-Signature');
+
+        if (!$this->isValidSignature($payload, $signature, $this->config('stripe_webhook_secret'))) {
             return response()->json(['error' => 'Invalid signature'], 400);
         }
 
-        $event = json_decode($request->getContent());
+        $event = json_decode($payload);
+        if (!is_object($event) || empty($event->type) || !isset($event->data->object)) {
+            return response()->json(['error' => 'Invalid event'], 400);
+        }
 
-        // Handle the event
         switch ($event->type) {
             case 'payment_intent.processing':
-                $paymentIntent = $event->data->object; // contains a StripePaymentIntent
-                if (!isset($paymentIntent->metadata->invoice_id)) {
-                    break;
-                }
-                ExtensionHelper::addProcessingPayment($paymentIntent->metadata->invoice_id, 'Stripe', $paymentIntent->amount / 100, null, $paymentIntent->id);
-                break;
-                // Normal payment
             case 'payment_intent.succeeded':
-                $paymentIntent = $event->data->object; // contains a StripePaymentIntent
-                if (!isset($paymentIntent->metadata->invoice_id)) {
-                    break;
-                }
-                ExtensionHelper::addPayment($paymentIntent->metadata->invoice_id, 'Stripe', $paymentIntent->amount / 100, null, $paymentIntent->id);
-                break;
             case 'payment_intent.payment_failed':
-                $paymentIntent = $event->data->object; // contains a StripePaymentIntent
-                if (!isset($paymentIntent->metadata->invoice_id)) {
+                $paymentIntent = $event->data->object;
+                $invoiceId = $paymentIntent->metadata->invoice_id ?? null;
+
+                if (!$invoiceId) {
                     break;
                 }
-                ExtensionHelper::addFailedPayment($paymentIntent->metadata->invoice_id, 'Stripe', $paymentIntent->amount / 100, null, $paymentIntent->id);
+
+                $invoice = Invoice::find($invoiceId);
+                if (!$invoice) {
+                    return response()->json(['error' => 'Invoice not found'], 404);
+                }
+
+                $currency = strtolower((string) ($paymentIntent->currency ?? ''));
+                $amount = ((float) ($paymentIntent->amount ?? 0)) / 100;
+
+                if (!PaymentAmountValidator::matches($invoice->currency_code, $currency, $invoice->remaining, $amount)
+                    && $event->type === 'payment_intent.succeeded') {
+                    return response()->json(['error' => 'Payment amount or currency mismatch'], 422);
+                }
+
+                if ($event->type === 'payment_intent.processing') {
+                    ExtensionHelper::addProcessingPayment($invoice, 'Stripe', $amount, null, $paymentIntent->id);
+                } elseif ($event->type === 'payment_intent.succeeded') {
+                    ExtensionHelper::addPayment($invoice, 'Stripe', $amount, null, $paymentIntent->id);
+                } else {
+                    ExtensionHelper::addFailedPayment($invoice, 'Stripe', $amount, null, $paymentIntent->id);
+                }
                 break;
+
             case 'charge.updated':
-                $charge = $event->data->object; // contains a StripeCharge
-                $invoiceTransaction = InvoiceTransaction::where('transaction_id', $charge->payment_intent)->first();
+                $charge = $event->data->object;
+                $paymentIntentId = $charge->payment_intent ?? null;
+                if (!$paymentIntentId) {
+                    break;
+                }
+
+                $invoiceTransaction = InvoiceTransaction::where('transaction_id', $paymentIntentId)->first();
                 if (!$invoiceTransaction) {
                     break;
                 }
-                // Get fee from charge
-                $fee = 0;
-                if ($charge->balance_transaction) {
-                    $balanceTransaction = $this->request('get', '/balance_transactions/' . $charge->balance_transaction);
-                    $fee = $balanceTransaction->fee / 100;
-                }
-                ExtensionHelper::addPaymentFee($charge->payment_intent, $fee);
 
+                $fee = 0;
+                if (!empty($charge->balance_transaction)) {
+                    $balanceTransaction = $this->request('get', '/balance_transactions/' . $charge->balance_transaction);
+                    $fee = ((float) ($balanceTransaction->fee ?? 0)) / 100;
+                }
+
+                ExtensionHelper::addPaymentFee($paymentIntentId, $fee);
                 break;
+
             case 'setup_intent.succeeded':
-                $setupIntent = $event->data->object; // contains a StripeSetupIntent
-                // If it's a billing agreement, call setupBillingAgreement
-                if (!isset($setupIntent->metadata->is_billing_agreement) || $setupIntent->metadata->is_billing_agreement !== '1') {
-                    $this->setupSubscription($setupIntent);
-                } else {
+                $setupIntent = $event->data->object;
+                if (($setupIntent->metadata->is_billing_agreement ?? null) === '1') {
                     $this->setupBillingAgreement($setupIntent);
+                } else {
+                    $this->setupSubscription($setupIntent);
                 }
                 break;
+
             case 'subscription_schedule.canceled':
-                $subscriptionSchedule = $event->data->object; // contains a StripeSubscriptionSchedule
+                $subscriptionSchedule = $event->data->object;
                 $service = Service::where('subscription_id', $subscriptionSchedule->id)->first();
                 if ($service) {
                     $service->update(['subscription_id' => null]);
                 }
                 break;
+
             case 'invoice.created':
-                $invoice = $event->data->object; // contains a StripeInvoice
+                $stripeInvoice = $event->data->object;
 
                 if ($this->config('stripe_use_subscriptions') !== true) {
                     break;
                 }
 
-                // Check if its draft and does exist in our database
-                if ($invoice->status === 'draft' && $invoice->parent->type === 'subscription_details') {
-                    $service = Service::where('subscription_id', $invoice->parent->subscription_details->subscription)->first();
+                if (($stripeInvoice->status ?? null) === 'draft'
+                    && ($stripeInvoice->parent->type ?? null) === 'subscription_details') {
+                    $service = Service::where(
+                        'subscription_id',
+                        $stripeInvoice->parent->subscription_details->subscription
+                    )->first();
 
                     if ($service) {
-                        $this->request('post', '/invoices/' . $invoice->id . '/finalize');
-                        // Pay the invoice using Stripe
-                        $this->request('post', '/invoices/' . $invoice->id . '/pay');
+                        $this->request('post', '/invoices/' . $stripeInvoice->id . '/finalize');
+                        $this->request('post', '/invoices/' . $stripeInvoice->id . '/pay');
                     }
                 }
                 break;
-            case 'invoice.payment_succeeded':
-                // Mark invoice as paid
-                $invoice = $event->data->object; // contains a StripeInvoice
 
-                if ($invoice->parent->type !== 'subscription_details') {
+            case 'invoice.payment_succeeded':
+                $stripeInvoice = $event->data->object;
+
+                if (($stripeInvoice->parent->type ?? null) !== 'subscription_details') {
                     break;
                 }
 
-                $service = Service::where('subscription_id', $invoice->parent->subscription_details->subscription)->first();
+                $service = Service::where(
+                    'subscription_id',
+                    $stripeInvoice->parent->subscription_details->subscription
+                )->first();
+
                 if ($service) {
-                    $invoiceModel = $service->invoiceItems->sortByDesc('created_at')->first()->invoice;
-                    $paymentIntents = $this->request('get', '/invoice_payments', ['invoice' => $invoice->id]);
-                    $paymentIntent = collect($paymentIntents->data)->first();
+                    $invoiceModel = $service->invoiceItems->sortByDesc('created_at')->first()?->invoice;
+                    $paymentIntents = $this->request('get', '/invoice_payments', ['invoice' => $stripeInvoice->id]);
+                    $payment = collect($paymentIntents->data ?? [])->first();
 
-                    if ($paymentIntent->payment->type !== 'payment_intent') {
-                        break;
+                    if ($invoiceModel && ($payment->payment->type ?? null) === 'payment_intent') {
+                        $amount = ((float) ($stripeInvoice->amount_paid ?? 0)) / 100;
+                        ExtensionHelper::addPayment(
+                            $invoiceModel,
+                            'Stripe',
+                            $amount,
+                            null,
+                            $payment->payment->payment_intent
+                        );
                     }
-
-                    ExtensionHelper::addPayment($invoiceModel->id, 'Stripe', $invoice->amount_paid / 100, null, $paymentIntent->payment->payment_intent);
                 }
                 break;
-            default:
-                // Not a event type we care about, just return 200
         }
 
-        http_response_code(200);
+        return response()->json(['received' => true]);
     }
 
     private function setupSubscription($setupIntent)
