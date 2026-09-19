@@ -23,6 +23,8 @@ class SuspendJob implements ShouldQueue, ShouldBeUnique
     public $backoff = [10, 30, 60];
     public $uniqueFor = 600;
 
+    public $afterCommit = true;
+
     public function __construct(public Service $service, public $sendNotification = true) {}
 
     public function uniqueId(): string
