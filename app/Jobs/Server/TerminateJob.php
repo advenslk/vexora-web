@@ -61,9 +61,16 @@ class TerminateJob implements ShouldQueue, ShouldBeUnique
             }
 
             $this->service->updateQuietly([
+                'status' => Service::STATUS_CANCELLED,
                 'provisioning_status' => 'completed',
                 'provisioning_error' => null,
             ]);
+
+            if ($this->service->product->stock !== null) {
+                $this->service->product->increment('stock', $this->service->quantity);
+            }
+
+            $this->service->invoices()->where('status', 'pending')->update(['status' => 'cancelled']);
 
             if ($this->sendNotification) {
                 NotificationHelper::serverTerminatedNotification($this->service->user, $this->service, is_array($data) ? $data : []);
