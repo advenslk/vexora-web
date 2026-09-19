@@ -6,21 +6,21 @@
     <meta name="theme-color" content="#06070a" />
     <meta name="color-scheme" content="dark" />
     <meta name="robots" content="index,follow,max-image-preview:large" />
-    <link rel="canonical" href="https://{{ parse_url(config('app.url'), PHP_URL_HOST) }}/" />
+    <link rel="canonical" href="{{ rtrim(config('app.url'), '/') }}/" />
     <link rel="icon" href="/assets/vexora-logo.png" />
     <title>Lunar Hosting — Game Servers, VPS, VDS & Cloud Hosting</title>
     <meta name="description" content="Affordable game server hosting from Starting at your configured plan price, free hosting, KVM VPS, VDS and bot hosting from Lunar Hosting. Fast NVMe infrastructure and protected deployments." />
     <meta property="og:site_name" content="Lunar Hosting" />
     <meta property="og:title" content="Lunar Hosting — Game Servers, VPS, VDS & Cloud Hosting" />
     <meta property="og:description" content="Affordable game servers from Starting at your configured plan price, free hosting, KVM VPS, VDS and bot hosting powered by fast NVMe infrastructure." />
-    <meta property="og:url" content="https://{{ parse_url(config('app.url'), PHP_URL_HOST) }}/" />
-    <meta property="og:image" content="https://{{ parse_url(config('app.url'), PHP_URL_HOST) }}/assets/vexora-brand-hero.png" />
+    <meta property="og:url" content="{{ rtrim(config('app.url'), '/') }}/" />
+    <meta property="og:image" content="{{ rtrim(config('app.url'), '/') }}/assets/vexora-brand-hero.png" />
     <meta property="og:image:alt" content="Lunar Hosting hosting infrastructure" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Lunar Hosting — Affordable Game Servers & VPS Hosting" />
     <meta name="twitter:description" content="Game server hosting from Starting at your configured plan price, free hosting, KVM VPS, VDS and bot hosting." />
-    <meta name="twitter:image" content="https://{{ parse_url(config('app.url'), PHP_URL_HOST) }}/assets/vexora-brand-hero.png" />
+    <meta name="twitter:image" content="{{ rtrim(config('app.url'), '/') }}/assets/vexora-brand-hero.png" />
     <script type="application/ld+json">
       @verbatim
       {
@@ -28,19 +28,18 @@
         "@graph": [
           {
             "@type": "Organization",
-            "@id": "https://{{ parse_url(config('app.url'), PHP_URL_HOST) }}/#organization",
+            "@id": "{{ rtrim(config('app.url'), '/') }}/#organization",
             "name": "Lunar Hosting",
-            "url": "https://{{ parse_url(config('app.url'), PHP_URL_HOST) }}/",
-            "logo": "https://{{ parse_url(config('app.url'), PHP_URL_HOST) }}/assets/vexora-logo.png",
-            "founder": { "@type": "Person", "name": "Ayush Kumar Jha" },
+            "url": "{{ rtrim(config('app.url'), '/') }}/",
+            "logo": "{{ rtrim(config('app.url'), '/') }}/assets/vexora-logo.png",
             "sameAs": ["https://discord.gg/eRxmF3NHpf"]
           },
           {
             "@type": "WebSite",
-            "@id": "https://{{ parse_url(config('app.url'), PHP_URL_HOST) }}/#website",
-            "url": "https://{{ parse_url(config('app.url'), PHP_URL_HOST) }}/",
+            "@id": "{{ rtrim(config('app.url'), '/') }}/#website",
+            "url": "{{ rtrim(config('app.url'), '/') }}/",
             "name": "Lunar Hosting",
-            "publisher": { "@id": "https://{{ parse_url(config('app.url'), PHP_URL_HOST) }}/#organization" }
+            "publisher": { "@id": "{{ rtrim(config('app.url'), '/') }}/#organization" }
           }
         ]
       }
