@@ -1,8 +1,11 @@
 #!/bin/ash
 set -eu
 
-mkdir -p /app/var /app/storage/framework/cache /app/storage/framework/sessions /app/storage/framework/views /app/storage/logs
-chown -R nginx:nginx /app/var /app/storage
+mkdir -p     /app/var     /app/storage/framework/cache     /app/storage/framework/sessions     /app/storage/framework/views     /app/storage/logs     /app/bootstrap/cache
+
+chown -R nginx:nginx     /app/var     /app/storage     /app/bootstrap/cache
+
+chmod -R u+rwX,go+rX     /app/var     /app/storage     /app/bootstrap/cache
 
 # APP_KEY is a deployment secret. Prefer the externally supplied value, but
 # persist the generated/existing value in the application environment so both
