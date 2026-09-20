@@ -16,7 +16,13 @@ RUN composer install --no-dev --no-autoloader --no-scripts
 
 COPY . ./
 
-RUN mkdir -p     storage/framework/cache     storage/framework/sessions     storage/framework/views     bootstrap/cache     && chmod -R ug+rwX storage bootstrap/cache
+RUN mkdir -p \
+    storage/framework/cache \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/logs \
+    bootstrap/cache \
+    && chmod -R ug+rwX storage bootstrap/cache
 
 RUN composer install --no-dev --optimize-autoloader
 
@@ -48,6 +54,11 @@ RUN cp -r /app/themes /app/themes_default && \
 # Environment variable to skip default themes/extensions renewal
 # Set PAYMENTER_SKIP_DEFAULT=true to keep any custom modifications to defaults
 ENV PAYMENTER_SKIP_DEFAULT=false
+
+# Runtime-writable Laravel directories must remain accessible to PHP-FPM.
+RUN mkdir -p /app/bootstrap/cache /app/storage /app/var \
+    && chown -R nginx:nginx /app/bootstrap/cache /app/storage /app/var \
+    && chmod -R u+rwX,go+rX /app/bootstrap/cache /app/storage /app/var
 
 COPY .github/docker/default.conf /etc/nginx/http.d/default.conf
 COPY .github/docker/www.conf /usr/local/etc/php-fpm.conf
