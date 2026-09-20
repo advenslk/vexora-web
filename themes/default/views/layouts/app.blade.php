@@ -8,7 +8,8 @@
     @php($documentTitle = request()->routeIs('home') ? 'Vexora Cloud - Minecraft Server Hosting India, Discord Bot Hosting & Cloud Billing' : trim(config('app.name', 'Vexora Cloud') . (isset($title) && $title ? ' - ' . $title : '')))
     <title>{{ $documentTitle }}</title>
     @livewireStyles
-    @vite(['themes/' . config('settings.theme') . '/js/app.js', 'themes/' . config('settings.theme') . '/css/app.css'], config('settings.theme'))
+    @php($activeTheme = config('settings.theme') ?: 'default')
+    @vite(['themes/' . $activeTheme . '/js/app.js', 'themes/' . $activeTheme . '/css/app.css'], $activeTheme)
     @include('layouts.colors')
     @php($isAuthRoute = request()->routeIs('login', 'register', 'password.*'))
     @php($usesWebsiteApp = request()->routeIs('home') || request()->is('game-servers', 'vps', 'vds', 'bot-hosting', 'free-hosting', 'support', 'contact', 'terms', 'refund-policy'))
