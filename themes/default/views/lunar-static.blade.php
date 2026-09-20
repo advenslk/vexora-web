@@ -155,7 +155,25 @@
             .footer-inner { align-items:flex-start; flex-direction:column; }
         }
     </style>
-</head>
+<style>
+:root{--bg:#05070b!important;--line:rgba(255,255,255,.075)!important;--accent:#78a9ff!important;--accent-2:#63e2d0!important;--max:1280px!important}
+body{background:#05070b!important;background-image:radial-gradient(900px 500px at 82% -8%,rgba(75,125,255,.18),transparent 65%),radial-gradient(700px 450px at 5% 12%,rgba(70,220,195,.07),transparent 65%)!important}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.18;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:72px 72px;mask-image:linear-gradient(#000,transparent 80%);z-index:-1}
+.nav-wrap{top:18px!important}.nav-wrap nav{max-width:1280px;margin:auto;min-height:70px!important;border-radius:18px!important;background:rgba(7,10,15,.78)!important;border-color:rgba(255,255,255,.12)!important;box-shadow:0 22px 70px rgba(0,0,0,.34)!important}
+.brand img{width:36px!important;height:36px!important}.brand span{font-size:17px!important}.links a{font-size:12px!important;color:#9da8b8!important}.links a:hover{color:#fff!important;background:rgba(255,255,255,.06)!important}
+.btn{min-height:44px!important;border-radius:12px!important}.btn-primary{background:linear-gradient(135deg,#b5ccff,#69e2d0)!important;box-shadow:0 14px 36px rgba(70,130,255,.2)!important}
+.hero{padding:190px 0 105px!important}.hero-grid{max-width:1280px!important;margin:auto!important;gap:65px!important}.eyebrow{background:rgba(255,255,255,.035)!important;border-color:rgba(255,255,255,.1)!important}
+h1{font-size:clamp(52px,6.8vw,92px)!important;line-height:.94!important;letter-spacing:-.07em!important}.lead{font-size:17px!important;color:#919cac!important}
+.visual{min-height:500px!important}.terminal{border-radius:24px!important;background:linear-gradient(145deg,#111824,#070a10)!important;box-shadow:0 45px 110px rgba(0,0,0,.58),0 0 100px rgba(70,120,255,.1)!important}
+section{padding:105px 0!important}.section-head{margin-bottom:34px!important}.kicker{color:#708097!important}.section-copy{color:#8b96a6!important}
+.cards{gap:14px!important}.card{min-height:235px!important;padding:26px!important;border-radius:20px!important;background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.015))!important}
+.card:hover{transform:translateY(-6px)!important;border-color:rgba(120,169,255,.32)!important;box-shadow:0 25px 70px rgba(0,0,0,.24)!important}.icon{border-radius:13px!important;background:rgba(90,140,255,.08)!important;color:#a7c5ff!important}
+.feature{gap:14px!important}.feature-box{border-radius:21px!important;background:rgba(255,255,255,.022)!important;border-color:rgba(255,255,255,.075)!important;padding:34px!important}
+.cta{border-radius:26px!important;padding:62px!important;background:radial-gradient(600px 260px at 85% 10%,rgba(99,226,208,.08),transparent 70%),linear-gradient(135deg,rgba(70,120,255,.13),rgba(255,255,255,.02))!important}
+footer{border-top-color:rgba(255,255,255,.07)!important}
+@media(max-width:900px){.nav-wrap{top:10px!important}.hero{padding-top:145px!important}.hero-grid{gap:30px!important}.visual{min-height:390px!important}.cards{grid-template-columns:1fr 1fr!important}}
+@media(max-width:560px){.shell{width:min(calc(100% - 24px),var(--max))!important}.hero{padding-top:135px!important}.cards{grid-template-columns:1fr!important}.cta{padding:30px 24px!important}.visual{min-height:330px!important}.terminal{transform:none!important}}
+</style></head>
 <body>
 <div class="nav-wrap">
     <div class="shell">
@@ -181,9 +199,9 @@
     <section class="hero">
         <div class="shell hero-grid">
             <div>
-                <div class="eyebrow"><span class="dot"></span> Infrastructure, simplified</div>
-                <h1>Deploy without the <span class="gradient">noise.</span></h1>
-                <p class="lead">Lunar Hosting brings servers, billing and infrastructure into one clean platform — built for people who want reliable hosting without a complicated control panel.</p>
+                <div class="eyebrow"><span class="dot"></span> Cloud infrastructure, simplified</div>
+                <h1>Infrastructure that gets out of the <span class="gradient">way.</span></h1>
+                <p class="lead">Modern VPS, VDS, game and bot hosting with automated billing, real infrastructure provisioning and a customer experience designed to stay out of your way.</p>
                 <div class="hero-actions">
                     <a class="btn btn-primary" href="/products">View available plans <span>→</span></a>
                     <a class="btn btn-ghost" href="#platform">See how it works</a>
@@ -225,7 +243,7 @@
     <section id="services">
         <div class="shell">
             <div class="section-head">
-                <div><div class="kicker">What you can run</div><h2>Hosting that fits the workload.</h2></div>
+                <div><div class="kicker">What you can run</div><h2>The right infrastructure for your workload.</h2></div>
                 <p class="section-copy">Choose the infrastructure you actually need. Plans and availability are managed from the live product catalogue — no hard-coded pricing on the landing page.</p>
             </div>
             <div class="cards">
@@ -240,7 +258,7 @@
     <section id="platform">
         <div class="shell">
             <div class="section-head">
-                <div><div class="kicker">The platform</div><h2>From payment to server.</h2></div>
+                <div><div class="kicker">The platform</div><h2>From order to running server.</h2></div>
                 <p class="section-copy">Lunar is designed around real service state. Payment confirmation can trigger queued provisioning, and the customer panel reflects the resulting service lifecycle.</p>
             </div>
             <div class="feature">
@@ -262,7 +280,7 @@
         <div class="shell">
             <div class="cta">
                 <div class="kicker">Ready when you are</div>
-                <h2>Choose a plan. We handle the rest.</h2>
+                <h2>Deploy with confidence. Manage everything in one place.</h2>
                 <p>Browse the current catalogue, create an account and manage your infrastructure from the Lunar Hosting panel.</p>
                 <div class="hero-actions">
                     <a class="btn btn-primary" href="/products">Browse plans →</a>
