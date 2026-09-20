@@ -19,18 +19,18 @@
     <meta name="twitter:card" content="summary_large_image">
     <script type="application/ld+json">
     {
-        "@context":"https://schema.org",
-        "@graph":[
+        "@@context":"https://schema.org",
+        "@@graph":[
             {
-                "@type":"Organization",
-                "@id":"{{ rtrim(config('app.url'), '/') }}/#organization",
+                "@@type":"Organization",
+                "@@id":"{{ rtrim(config('app.url'), '/') }}/#organization",
                 "name":"Lunar Hosting",
                 "url":"{{ rtrim(config('app.url'), '/') }}/",
                 "logo":"{{ rtrim(config('app.url'), '/') }}/assets/vexora-logo.png"
             },
             {
-                "@type":"WebSite",
-                "@id":"{{ rtrim(config('app.url'), '/') }}/#website",
+                "@@type":"WebSite",
+                "@@id":"{{ rtrim(config('app.url'), '/') }}/#website",
                 "name":"Lunar Hosting",
                 "url":"{{ rtrim(config('app.url'), '/') }}/"
             }
@@ -142,12 +142,12 @@
         .cta h2 { max-width:650px; } .cta p { color:#8d98a8; max-width:600px; line-height:1.7; }
         footer { padding:30px 0 45px; border-top:1px solid var(--line); color:#6e7887; font-size:12px; }
         .footer-inner { display:flex; justify-content:space-between; gap:20px; align-items:center; } .footer-links { display:flex; gap:16px; } .footer-links a:hover { color:#dce1e8; }
-        @media (max-width: 900px) {
+        @@media (max-width: 900px) {
             .links { display:none; } .hero-grid,.feature { grid-template-columns:1fr; } .visual { min-height:390px; }
             .cards { grid-template-columns:1fr 1fr; } .section-head { align-items:start; flex-direction:column; }
             .hero { padding-top:145px; } h1 { font-size:clamp(48px,13vw,72px); }
         }
-        @media (max-width: 560px) {
+        @@media (max-width: 560px) {
             .shell { width:min(calc(100% - 24px),var(--max)); } nav { min-height:60px; padding-left:12px; }
             .actions .btn-ghost { display:none; } .cards { grid-template-columns:1fr; } .hero { padding-bottom:55px; }
             section { padding:65px 0; } .cta { padding:28px; } .ticks { grid-template-columns:1fr; } .visual { min-height:330px; }
